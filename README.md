@@ -1,32 +1,47 @@
-# React + TypeScript + Vite
+# WardPulse
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+**An offline-first ward console for low-cost patient monitors.**
 
-Currently, two official plugins are available:
+One nurse watching many beds needs to know three things: which patient is getting worse, which alarm is only a loose sensor, and whether any data was lost when the internet dropped. WardPulse answers all three for monitors that cost thousands of rupees, not lakhs.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+> Built during CODEFESTTHON 2026 (22–24 Nov 2026). The commit history in this repo is the build log.
 
-## React Compiler
+## Status
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+| Part | State |
+|---|---|
+| Packet schema and validator | ✅ done, tested |
+| Ward simulator (PPG + scenarios) | ⏳ next |
+| Signal engine (SQI, NEWS2 subset, trend detection) | ⏳ |
+| Central station UI | ⏳ |
+| Alarm escalation and audit log | ⏳ |
+| Offline-first sync and fleet health | ⏳ |
+| Validation lab and shift handover | ⏳ |
+| Hardware bridge (`bridge.py`) | ⏳ |
 
-## Expanding the Oxlint configuration
+## Run it
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+npm run dev      # console at http://localhost:5173
+npm test         # unit tests
+npm run build    # production build
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+## How it fits together
+
+- **Hub or simulator** sends JSON packets (see [docs/packet-schema.md](docs/packet-schema.md)).
+- **Signal engine** scores signal quality, computes early-warning scores and detects trends.
+- **Console** shows every bed, raises and escalates alarms, and keeps working offline.
+
+A fuller architecture section will come with the engine.
+
+## Important limitations
+
+- **Not a medical device.** WardPulse is clinical decision support for evaluation and pilots. It does not diagnose, and it has not been clinically validated.
+- **The demo uses simulated patients.** Scenario data is synthetic, and any lead-time numbers shown in the demo come from those simulations, not from real patients.
+- **The early-warning score is partial.** It uses only the heart-rate and SpO₂ parts of NEWS2, because low-cost PPG monitors don't measure the other vital signs.
+
+## Licence
+
+MIT
