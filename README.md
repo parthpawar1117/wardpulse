@@ -11,8 +11,8 @@ One nurse watching many beds needs to know three things: which patient is gettin
 | Part | State |
 |---|---|
 | Packet schema and validator | ✅ done, tested |
-| Ward simulator (PPG + scenarios) | ⏳ next |
-| Signal engine (SQI, NEWS2 subset, trend detection) | ⏳ |
+| Ward simulator (PPG + scenarios) | ✅ done, tested |
+| Signal engine (SQI, NEWS2 subset, trend detection) | ⏳ next |
 | Central station UI | ⏳ |
 | Alarm escalation and audit log | ⏳ |
 | Offline-first sync and fleet health | ⏳ |
