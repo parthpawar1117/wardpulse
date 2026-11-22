@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+/* WardPulse design tokens.
+   Dark-first: PHC wards run night shifts, so the console defaults to dark.
+   Colour is reserved for clinical severity; everything else is neutral. */
+@theme {
+  --font-sans: "Inter", system-ui, "Segoe UI", sans-serif;
+  --font-display: "Space Grotesk", "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+
+  --color-ground: var(--wp-ground);
+  --color-panel: var(--wp-panel);
+  --color-edge: var(--wp-edge);
+  --color-ink: var(--wp-ink);
+  --color-dim: var(--wp-dim);
+  --color-signal: var(--wp-signal);
+  --color-stable: var(--wp-stable);
+  --color-watch: var(--wp-watch);
+  --color-critical: var(--wp-critical);
+}
+
+:root {
+  color-scheme: dark;
+  --wp-ground: #0b1416;
+  --wp-panel: #122022;
+  --wp-edge: #213236;
+  --wp-ink: #e4eeee;
+  --wp-dim: #8fa5a7;
+  --wp-signal: #4fd1c5;
+  --wp-stable: #6fd69b;
+  --wp-watch: #f0c060;
+  --wp-critical: #ff8a80;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --wp-ground: #f4f7f7;
+  --wp-panel: #ffffff;
+  --wp-edge: #d6e0e1;
+  --wp-ink: #132022;
+  --wp-dim: #56656a;
+  --wp-signal: #0f7c79;
+  --wp-stable: #1d7a46;
+  --wp-watch: #8a5a00;
+  --wp-critical: #b4231a;
+}
+
+body {
+  margin: 0;
+  background: var(--wp-ground);
+  color: var(--wp-ink);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+}
