@@ -20,9 +20,13 @@ const sd = (xs: number[]) => {
 }
 const ac = (xs: number[]) => Math.max(...xs) - Math.min(...xs)
 
-/** Counts pulses with hysteresis so noise near the midline is not double-counted. */
+/**
+ * Counts pulses with hysteresis so noise near the midline is not double-counted.
+ * Thresholds sit around the midrange, not the mean: a PPG beat is a short dip on a
+ * long flat baseline, so the mean sits near the top and a mean-based threshold misses beats.
+ */
 function countBeats(xs: number[]): number {
-  const m = mean(xs)
+  const m = (Math.max(...xs) + Math.min(...xs)) / 2
   const band = 0.25 * ac(xs)
   let armed = false
   let beats = 0
