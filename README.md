@@ -12,8 +12,8 @@ One nurse watching many beds needs to know three things: which patient is gettin
 |---|---|
 | Packet schema and validator | ✅ done, tested |
 | Ward simulator (PPG + scenarios) | ✅ done, tested |
-| Signal engine (SQI, NEWS2 subset, trend detection) | ⏳ next |
-| Central station UI | ⏳ |
+| Signal engine (SQI, NEWS2 subset, trend detection) | ✅ done, tested |
+| Central station UI | ⏳ next |
 | Alarm escalation and audit log | ⏳ |
 | Offline-first sync and fleet health | ⏳ |
 | Validation lab and shift handover | ⏳ |
@@ -31,10 +31,10 @@ npm run build    # production build
 ## How it fits together
 
 - **Hub or simulator** sends JSON packets (see [docs/packet-schema.md](docs/packet-schema.md)).
-- **Signal engine** scores signal quality, computes early-warning scores and detects trends.
+- **Signal engine** scores signal quality, computes early-warning scores and detects trends (see [docs/engine.md](docs/engine.md)).
 - **Console** shows every bed, raises and escalates alarms, and keeps working offline.
 
-A fuller architecture section will come with the engine.
+On the simulated demo ward, the trend detector flags a slow deterioration about 19 minutes before a conventional HR > 110 alarm would. That number comes from synthetic patients; see the caveat in the engine docs.
 
 ## Important limitations
 
