@@ -22,10 +22,15 @@ export type Speed = (typeof SPEEDS)[number]
  * Runs the ward simulator in a Web Worker and exposes the store's state to React.
  * The worker keeps PPG synthesis off the main thread so waveforms never stutter.
  */
-export function useWard() {
+export function useWard(onPackets?: (packets: unknown[]) => void) {
   const [store] = useState(() => createWardStore(createDemoWard().map(({ id, patient }) => ({ id, patient })), { linkFor }))
   const state = useSyncExternalStore(store.subscribe, store.getState)
   const worker = useRef<Worker | null>(null)
+  // Kept in a ref so a new callback never restarts the simulator.
+  const packetSink = useRef(onPackets)
+  useEffect(() => {
+    packetSink.current = onPackets
+  }, [onPackets])
   const clock = useRef<BatchClock>({ lastBatchAt: 0, periodMs: 1000 })
   const [speed, setSpeedState] = useState<Speed>(1)
   const [paused, setPaused] = useState(false)
@@ -37,6 +42,7 @@ export function useWard() {
     w.onmessage = (e: MessageEvent<FromSimulator>) => {
       clock.current.lastBatchAt = performance.now()
       store.ingest(e.data)
+      packetSink.current?.(e.data.packets)
     }
     worker.current = w
     store.reset()
