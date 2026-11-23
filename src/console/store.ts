@@ -23,6 +23,11 @@ export const OFFLINE_AFTER = 10
 export const WAVE_SAMPLES = 6 * SAMPLE_RATE
 /** Readings kept per bed for the trend charts: ten minutes at 1 Hz. */
 export const HISTORY_LENGTH = 600
+/** Battery readings kept per bed, one every BATT_SAMPLE_EVERY seconds: fifteen minutes. */
+export const BATT_SAMPLES = 90
+export const BATT_SAMPLE_EVERY = 10
+/** Recent packet outcomes kept per bed for the loss rate: about two minutes. */
+export const LINK_HISTORY = 120
 /** Phone messages kept, across all staff. */
 export const MESSAGE_LIMIT = 200
 
@@ -42,6 +47,10 @@ export interface BedView {
   lost: number
   batt: number | null
   rssi: number | null
+  /** [simulation second, battery fraction], one every BATT_SAMPLE_EVERY seconds. */
+  battSamples: [number, number][]
+  /** Recent packets in arrival order: 1 arrived, 0 lost in transit. */
+  linkHistory: (0 | 1)[]
 }
 
 /** One message on a staff phone: a page or bot reply from WardPulse, or something staff typed. */
@@ -130,6 +139,8 @@ export function createWardStore(roster: { id: string; patient: string }[], opts:
     lost: 0,
     batt: null,
     rssi: null,
+    battSamples: [],
+    linkHistory: [],
   })
 
   const initial = (): WardState => ({
@@ -195,6 +206,11 @@ export function createWardStore(roster: { id: string; patient: string }[], opts:
         lost: prev.lost + a.missed,
         batt: p.batt,
         rssi: p.rssi,
+        battSamples:
+          p.batt !== null && (prev.battSamples.length === 0 || simTime - prev.battSamples.at(-1)![0] >= BATT_SAMPLE_EVERY)
+            ? append(prev.battSamples, [[simTime, p.batt]], BATT_SAMPLES)
+            : prev.battSamples,
+        linkHistory: append(prev.linkHistory, [...Array<0>(Math.min(a.missed, LINK_HISTORY)).fill(0), 1 as const], LINK_HISTORY),
       }
     }
 

@@ -22,6 +22,8 @@ function bed(id: string, patient: string, status: BedView['status'], trusted: bo
     lost: 0,
     batt: 0.9,
     rssi: -60,
+    battSamples: [],
+    linkHistory: [],
   }
 }
 
