@@ -9,6 +9,12 @@ function Stat({ label, value, tone = '' }: { label: string; value: string | numb
   )
 }
 
+/**
+ * Readings always wait a moment between flushes, so a small queue is normal.
+ * Above this, the ward is working through a backlog after an outage.
+ */
+const BACKLOG = 500
+
 const ago = (at: number | null) => {
   if (at === null) return 'never'
   const s = Math.max(0, Math.round((Date.now() - at) / 1000))
@@ -30,7 +36,7 @@ export function SyncPanel({ sync }: { sync: SyncState }) {
           <h2 className="font-mono text-[11px] uppercase tracking-wider text-dim">Uplink to district server (simulated)</h2>
           <div className={`mt-1 flex items-center gap-2 font-medium ${up ? 'text-stable' : 'text-watch'}`}>
             <span className={`size-2 rounded-full bg-current ${stats.syncing ? 'motion-safe:animate-pulse' : ''}`} aria-hidden="true" />
-            {up ? (stats.queued > 0 ? 'Online · catching up' : 'Online · in sync') : online ? 'Browser offline' : 'Network pulled'}
+            {up ? (stats.queued > BACKLOG ? 'Online · catching up' : 'Online · in sync') : online ? 'Browser offline' : 'Network pulled'}
           </div>
         </div>
         <button
