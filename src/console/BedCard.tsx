@@ -21,9 +21,11 @@ function Vital({ label, unit, value, held }: { label: string; unit: string; valu
 export function BedCard({ bed, clock, onOpen }: { bed: BedView; clock: RefObject<BatchClock>; onOpen: () => void }) {
   const a = bed.latest
   const held = !a?.trusted
-  const sqi = a?.sqi.sqi ?? 0
-  const trending = a && (a.trend.hr.alarm || a.trend.spo2.alarm)
   const live = bed.status !== 'offline'
+  // An offline bed's last reading is stale, so show nothing rather than old numbers.
+  const shown = live ? a : null
+  const sqi = shown?.sqi.sqi ?? 0
+  const trending = shown && (shown.trend.hr.alarm || shown.trend.spo2.alarm)
 
   return (
     <button
@@ -46,8 +48,8 @@ export function BedCard({ bed, clock, onOpen }: { bed: BedView; clock: RefObject
       <Waveform wave={live ? bed.wave : []} clock={clock} dimmed={held} className="h-14 text-signal" />
 
       <div className="grid grid-cols-2 gap-3">
-        <Vital label="HR" unit="bpm" value={live ? (a?.hr ?? null) : null} held={held} />
-        <Vital label="SpO₂" unit="%" value={live ? (a?.spo2 ?? null) : null} held={held} />
+        <Vital label="HR" unit="bpm" value={shown?.hr ?? null} held={held} />
+        <Vital label="SpO₂" unit="%" value={shown?.spo2 ?? null} held={held} />
       </div>
 
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] text-dim">
@@ -59,11 +61,11 @@ export function BedCard({ bed, clock, onOpen }: { bed: BedView; clock: RefObject
               style={{ width: `${Math.round(sqi * 100)}%` }}
             />
           </span>
-          {a ? sqi.toFixed(2) : '–'}
+          {shown ? sqi.toFixed(2) : '–'}
         </span>
-        <span title="Partial NEWS2: heart rate and SpO2 only">NEWS2* {a?.news2?.score ?? '–'}</span>
+        <span title="Partial NEWS2: heart rate and SpO2 only">NEWS2* {shown?.news2?.score ?? '–'}</span>
         {trending && <span className="text-watch">↗ trend</span>}
-        {held && a && live && <span>vitals held</span>}
+        {held && shown && <span>vitals held</span>}
       </div>
     </button>
   )
