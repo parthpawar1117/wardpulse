@@ -5,6 +5,7 @@ export const STATUS_LABEL: Record<BedStatus, string> = {
   watch: 'Watch',
   'no-signal': 'Check sensor',
   artefact: 'Artefact',
+  checking: 'Checking',
   offline: 'Offline',
   stable: 'Stable',
 }
@@ -15,6 +16,7 @@ export const STATUS_TEXT: Record<BedStatus, string> = {
   watch: 'text-watch',
   'no-signal': 'text-watch',
   artefact: 'text-dim',
+  checking: 'text-dim',
   offline: 'text-dim',
   stable: 'text-stable',
 }
@@ -24,6 +26,7 @@ export const STATUS_BORDER: Record<BedStatus, string> = {
   watch: 'border-watch',
   'no-signal': 'border-watch/60',
   artefact: 'border-edge',
+  checking: 'border-edge',
   offline: 'border-edge',
   stable: 'border-edge',
 }

@@ -8,10 +8,10 @@ import { SAMPLE_RATE } from '../sim/ppg'
  * Every batch produces a new state object, which is what lets React see the change.
  */
 
-export type BedStatus = 'critical' | 'watch' | 'no-signal' | 'artefact' | 'offline' | 'stable'
+export type BedStatus = 'critical' | 'watch' | 'no-signal' | 'artefact' | 'checking' | 'offline' | 'stable'
 
 /** Most urgent first, for sorting the attention strip. */
-export const STATUS_ORDER: BedStatus[] = ['critical', 'watch', 'no-signal', 'artefact', 'offline', 'stable']
+export const STATUS_ORDER: BedStatus[] = ['critical', 'watch', 'no-signal', 'artefact', 'checking', 'offline', 'stable']
 
 /** Seconds of silence before a bed counts as offline. */
 export const OFFLINE_AFTER = 10
@@ -63,6 +63,8 @@ export function bedStatus(bed: Pick<BedView, 'latest' | 'lastSeen'>, simTime: nu
   const a = bed.latest
   if (!a || simTime - bed.lastSeen > OFFLINE_AFTER) return 'offline'
   if (a.sqi.reasons.includes('no-contact')) return 'no-signal'
+  // Too few samples to judge (start-up, or the window restarted after lost packets).
+  if (a.sqi.reasons.includes('insufficient-data')) return 'checking'
   if (!a.trusted) return 'artefact'
   if (a.news2 && (a.news2.redFlag || a.news2.band === 'medium')) return 'critical'
   if (a.trend.hr.alarm || a.trend.spo2.alarm || (a.news2?.score ?? 0) >= 3) return 'watch'
