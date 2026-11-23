@@ -33,7 +33,7 @@ export interface TrendState {
   baseline: number | null
   /** Smoothed latest value, or null before the first reading. */
   ewma: number | null
-  /** Accumulated evidence of drift. 0 means none. */
+  /** Accumulated evidence of drift, from 0 (none) up to twice the threshold. */
   cusum: number
   /** True while cusum is at or above the threshold. */
   alarm: boolean
@@ -84,7 +84,9 @@ export function createTrendDetector(cfg: TrendConfig): TrendDetector {
       return state()
     }
 
-    cusum = round3(Math.max(0, cusum + sign * (blockMean - baseline) - cfg.allowance))
+    // Capped at twice the threshold: enough to hold the alarm through a brief
+    // dip, but a recovered patient drains below the threshold within minutes.
+    cusum = round3(Math.min(2 * cfg.threshold, Math.max(0, cusum + sign * (blockMean - baseline) - cfg.allowance)))
     return state()
   }
 
