@@ -244,3 +244,20 @@ describe('ward store alarms and messages', () => {
     expect(s.messages).toEqual([])
   })
 })
+
+describe('ward store fleet history', () => {
+  it('samples battery every 10 s and keeps a recent packet-arrival history', () => {
+    const store = createWardStore(roster)
+    for (let s = 0; s < 30; s++) store.ingest({ simTime: s, packets: [packet('bed-01', s, { batt: 0.9 - s * 0.001 })] })
+    const bed = store.getState().beds['bed-01']
+    expect(bed.battSamples.map(([t]) => t)).toEqual([0, 10, 20])
+    expect(bed.linkHistory).toEqual(Array(30).fill(1))
+  })
+
+  it('records lost packets as gaps in the arrival history', () => {
+    const store = createWardStore(roster)
+    store.ingest({ simTime: 0, packets: [packet('bed-01', 0)] })
+    store.ingest({ simTime: 3, packets: [packet('bed-01', 3)] })
+    expect(store.getState().beds['bed-01'].linkHistory).toEqual([1, 0, 0, 1])
+  })
+})
