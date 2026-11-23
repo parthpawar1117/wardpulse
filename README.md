@@ -17,8 +17,8 @@ One nurse watching many beds needs to know three things: which patient is gettin
 | Signal engine (SQI, NEWS2 subset, trend detection) | ✅ done, tested |
 | Central station UI | ✅ done, tested |
 | Alarm escalation, staff phones and audit log | ✅ done, tested |
-| Offline-first sync and fleet health | ⏳ next |
-| Validation lab and shift handover | ⏳ |
+| Offline-first sync and fleet health | ✅ done, tested |
+| Validation lab and shift handover | ⏳ next |
 | Hardware bridge (`bridge.py`) | ⏳ |
 
 ## Run it
@@ -51,6 +51,15 @@ npm run build    # production build
 - **WardPulse bot.** Staff can text `status`, `bed 5`, `alarms` or `ack 5`. Pages link to a frozen snapshot of the whole ward that needs no server. Messages never contain patient names.
 
 See [docs/alarms.md](docs/alarms.md) for the rules, the demo timeline and the path to a real WhatsApp number.
+
+### Offline-first
+
+- **The internet can drop without losing anything.** Monitoring, alarms and staff phones run on the ward network. Readings queue in the browser's storage (IndexedDB) and upload to the district server when the link returns.
+- **No duplicates.** A batch is deleted only when the server confirms it. If a confirmation is lost, the batch is resent, and the server recognises each reading by its key and stores it once.
+- **Works with no internet at all.** After one visit, a service worker lets the console load and run offline.
+- **Fleet health.** Every node's battery (with estimated time to empty), radio link and recent packet loss, flagged before a node dies.
+
+Try **Pull the network** in the Uplink panel. See [docs/offline.md](docs/offline.md).
 
 On the simulated demo ward, the trend detector flags a slow deterioration about 19 minutes before a conventional HR > 110 alarm would. That number comes from synthetic patients; see the caveat in the engine docs.
 
