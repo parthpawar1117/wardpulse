@@ -32,8 +32,8 @@ function Meter({ value, max, label }: { value: number; max: number; label: strin
       <span className="relative h-1.5 flex-1 overflow-hidden rounded-full bg-edge" role="meter" aria-valuenow={value} aria-valuemin={0} aria-valuemax={max} aria-label={label}>
         <span className={`absolute inset-y-0 left-0 rounded-full ${pct >= 100 ? 'bg-watch' : 'bg-signal'}`} style={{ width: `${pct}%` }} />
       </span>
-      <span className="w-20 text-right font-mono text-xs text-dim">
-        {value.toFixed(1)} / {max}
+      <span className={`w-20 text-right font-mono text-xs ${pct >= 100 ? 'text-watch' : 'text-dim'}`}>
+        {pct >= 100 ? 'alarm' : `${value.toFixed(1)} / ${max}`}
       </span>
     </div>
   )
@@ -99,12 +99,12 @@ export function BedDrawer({ bed, onClose }: { bed: BedView; onClose: () => void 
           <div className="space-y-3">
             <div>
               <div className="flex justify-between text-sm"><span>Heart rate</span><span className="font-mono text-xs text-dim">baseline {a?.trend.hr.baseline?.toFixed(0) ?? 'learning'}</span></div>
-              <Sparkline values={bed.hrHistory} baseline={a?.trend.hr.baseline} min={40} max={160} label="Heart rate trend" className="text-signal" />
+              <Sparkline values={bed.hrHistory} baseline={a?.trend.hr.baseline} min={40} max={160} span={20} label="Heart rate trend" className="text-signal" />
               {a && <Meter value={a.trend.hr.cusum} max={HR_RISE.threshold} label="Rise evidence" />}
             </div>
             <div>
               <div className="flex justify-between text-sm"><span>SpO₂</span><span className="font-mono text-xs text-dim">baseline {a?.trend.spo2.baseline?.toFixed(1) ?? 'learning'}</span></div>
-              <Sparkline values={bed.spo2History} baseline={a?.trend.spo2.baseline} min={80} max={100} label="SpO2 trend" className="text-signal" />
+              <Sparkline values={bed.spo2History} baseline={a?.trend.spo2.baseline} min={80} max={100} span={4} label="SpO2 trend" className="text-signal" />
               {a && <Meter value={a.trend.spo2.cusum} max={SPO2_FALL.threshold} label="Fall evidence" />}
             </div>
             <p className="text-xs text-dim">Evidence builds when readings stay beyond the patient's own baseline. At full scale the bed moves to Watch.</p>

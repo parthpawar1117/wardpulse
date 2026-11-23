@@ -5,20 +5,35 @@
 export function Sparkline({
   values,
   baseline,
-  min,
-  max,
+  min: floor,
+  max: ceiling,
+  span = 0,
   label,
   className = '',
 }: {
   values: (number | null)[]
   baseline?: number | null
+  /** Hard limits of the axis. */
   min: number
   max: number
+  /** Smallest visible range, so normal noise isn't magnified into a scary line. */
+  span?: number
   label: string
   className?: string
 }) {
   const W = 300
   const H = 64
+  // Fit the axis to the data and baseline, but never tighter than `span`.
+  const seen = values.filter((v): v is number => v !== null).concat(baseline ?? [])
+  let min = seen.length ? Math.min(...seen) : floor
+  let max = seen.length ? Math.max(...seen) : ceiling
+  if (max - min < span) {
+    const mid = (min + max) / 2
+    min = mid - span / 2
+    max = mid + span / 2
+  }
+  min = Math.max(floor, min - 1)
+  max = Math.min(ceiling, max + 1)
   const y = (v: number) => H - ((Math.min(max, Math.max(min, v)) - min) / (max - min)) * H
   const x = (i: number) => (values.length < 2 ? 0 : (i / (values.length - 1)) * W)
 
