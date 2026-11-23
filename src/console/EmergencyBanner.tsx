@@ -38,10 +38,14 @@ export function EmergencyBanner({
         return (
           <div
             key={a.id}
-            className={`flex flex-wrap items-center gap-x-5 gap-y-2 rounded-lg border-2 border-critical px-4 py-3 ${open ? 'bg-critical/15 motion-safe:animate-pulse' : 'bg-panel'}`}
+            className={`flex flex-wrap items-center gap-x-5 gap-y-2 rounded-lg border-2 border-critical px-4 py-3 ${open ? 'bg-critical/15' : 'bg-panel'}`}
           >
             <div className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-3">
-              <span className="font-mono text-xs font-bold uppercase tracking-widest text-critical">Emergency</span>
+              <span className="flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-widest text-critical">
+                {/* Only the dot pulses: the text must stay readable at every moment. */}
+                <span className={`size-2.5 rounded-full bg-critical ${open ? 'motion-safe:animate-ping' : ''}`} aria-hidden="true" />
+                Emergency
+              </span>
               <span className="font-display text-xl font-semibold">{bedLabel(a.bed)}</span>
               <span className="text-lg">{a.reason}</span>
               <span className="font-mono text-xs text-dim">for {elapsed(simTime - a.priorityAt)}</span>

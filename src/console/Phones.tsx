@@ -88,7 +88,7 @@ function Phone({
         ))}
       </div>
 
-      <div className="flex gap-1 overflow-x-auto border-t border-edge px-2 pt-2">
+      <div className="flex flex-wrap gap-1 border-t border-edge px-2 pt-2">
         {QUICK.map((q) => (
           <button
             key={q}
