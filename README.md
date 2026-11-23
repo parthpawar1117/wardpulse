@@ -13,8 +13,8 @@ One nurse watching many beds needs to know three things: which patient is gettin
 | Packet schema and validator | ✅ done, tested |
 | Ward simulator (PPG + scenarios) | ✅ done, tested |
 | Signal engine (SQI, NEWS2 subset, trend detection) | ✅ done, tested |
-| Central station UI | ⏳ next |
-| Alarm escalation and audit log | ⏳ |
+| Central station UI | ✅ done, tested |
+| Alarm escalation and audit log | ⏳ next |
 | Offline-first sync and fleet health | ⏳ |
 | Validation lab and shift handover | ⏳ |
 | Hardware bridge (`bridge.py`) | ⏳ |
@@ -33,6 +33,13 @@ npm run build    # production build
 - **Hub or simulator** sends JSON packets (see [docs/packet-schema.md](docs/packet-schema.md)).
 - **Signal engine** scores signal quality, computes early-warning scores and detects trends (see [docs/engine.md](docs/engine.md)).
 - **Console** shows every bed, raises and escalates alarms, and keeps working offline.
+
+### The central station
+
+- **Bed grid.** Each card shows a live, smoothly scrolling PPG trace, HR, SpO₂, signal quality and the partial NEWS2. Vitals the engine doesn't trust are greyed out as *held*.
+- **Attention strip.** Lists the beds that need a look, most urgent first: Critical, Watch, Check sensor, Artefact, Checking, Offline.
+- **Bed drawer.** Explains *why* a bed has its status: the NEWS2 breakdown, signal-quality reasons in plain words, ten-minute trend lines against the patient's own baseline, and node battery, link and packet loss.
+- **Simulator.** Runs in a Web Worker at 1×, 10× or 30×. The *simulated data* label is always on screen.
 
 On the simulated demo ward, the trend detector flags a slow deterioration about 19 minutes before a conventional HR > 110 alarm would. That number comes from synthetic patients; see the caveat in the engine docs.
 
