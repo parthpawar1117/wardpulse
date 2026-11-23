@@ -13,7 +13,7 @@ const packet = (node: string, seq: number, over: Partial<Packet> = {}): Packet =
   hub: 'ward-a',
   node,
   seq,
-  ts: seq * 1000,
+  ts: 1_795_000_000_000 + seq * 1000,
   hr: 80,
   spo2: 97,
   pi: 2.5,
