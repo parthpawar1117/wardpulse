@@ -30,6 +30,9 @@ const STATE: WardState = {
   order: ['bed-05', 'bed-03'],
   beds: { 'bed-05': bed('bed-05', 'G. Wankhede', 'critical', true), 'bed-03': bed('bed-03', 'M. Rao', 'artefact', false) },
   rejected: 0,
+  alarms: [],
+  audit: [],
+  messages: [],
 }
 const ALARMS = [{ bed: 'bed-05', priority: 'P1', reason: 'SpO₂ 87%', state: 'active' }] as Alarm[]
 

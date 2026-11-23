@@ -34,6 +34,9 @@ const STATE: WardState = {
     'bed-07': bed('bed-07', 'P. Gawande', 'offline'),
   },
   rejected: 0,
+  alarms: [],
+  audit: [],
+  messages: [],
 }
 
 const ALARM = {

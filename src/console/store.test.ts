@@ -185,7 +185,8 @@ describe('ward store alarms and messages', () => {
   it('pages only for the hypoxic bed across the demo shift, then escalates to the doctor', () => {
     const { store, run } = demo(600)
     let s = store.getState()
-    const emergencies = s.audit.filter((e) => e.event === 'raised' && e.detail.startsWith('P1'))
+    // A bed can reach P1 directly or by stepping up from P2.
+    const emergencies = s.audit.filter((e) => (e.event === 'raised' || e.event === 'upgraded') && e.detail.startsWith('P1'))
     expect(emergencies.map((e) => e.bed)).toEqual(['bed-05'])
     const pages = s.messages.filter((m) => m.from === 'wardpulse')
     expect(pages[0]).toMatchObject({ staffId: 'n1', kind: 'emergency' })
