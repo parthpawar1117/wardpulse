@@ -1,0 +1,59 @@
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import type { FromSimulator, ToSimulator } from '../sim/protocol'
+import { createDemoWard } from '../sim/ward'
+import { createWardStore } from './store'
+
+/** When the latest batch arrived and how often batches come, so waveforms can scroll smoothly between them. */
+export interface BatchClock {
+  lastBatchAt: number
+  periodMs: number
+}
+
+export const SPEEDS = [1, 10, 30] as const
+export type Speed = (typeof SPEEDS)[number]
+
+/**
+ * Runs the ward simulator in a Web Worker and exposes the store's state to React.
+ * The worker keeps PPG synthesis off the main thread so waveforms never stutter.
+ */
+export function useWard() {
+  const [store] = useState(() => createWardStore(createDemoWard().map(({ id, patient }) => ({ id, patient }))))
+  const state = useSyncExternalStore(store.subscribe, store.getState)
+  const worker = useRef<Worker | null>(null)
+  const clock = useRef<BatchClock>({ lastBatchAt: 0, periodMs: 1000 })
+  const [speed, setSpeedState] = useState<Speed>(1)
+  const [paused, setPaused] = useState(false)
+
+  const send = (msg: ToSimulator) => worker.current?.postMessage(msg)
+
+  useEffect(() => {
+    const w = new Worker(new URL('../sim/sim.worker.ts', import.meta.url), { type: 'module' })
+    w.onmessage = (e: MessageEvent<FromSimulator>) => {
+      clock.current.lastBatchAt = performance.now()
+      store.ingest(e.data)
+    }
+    worker.current = w
+    store.reset()
+    clock.current.periodMs = 1000
+    w.postMessage({ type: 'start', seed: 42, speed: 1, startTs: Date.now() } satisfies ToSimulator)
+    return () => {
+      w.terminate()
+      worker.current = null
+    }
+  }, [store])
+
+  const setSpeed = useCallback((s: Speed) => {
+    setSpeedState(s)
+    clock.current.periodMs = 1000 / s
+    send({ type: 'set-speed', speed: s })
+  }, [])
+
+  const togglePause = useCallback(() => {
+    setPaused((p) => {
+      send({ type: p ? 'resume' : 'pause' })
+      return !p
+    })
+  }, [])
+
+  return { state, clock, speed, setSpeed, paused, togglePause }
+}
