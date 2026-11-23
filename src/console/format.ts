@@ -1,4 +1,17 @@
+import type { AlarmPriority } from './alarms'
 import type { BedStatus } from './store'
+
+export const PRIORITY_LABEL: Record<AlarmPriority, string> = {
+  P1: 'Emergency',
+  P2: 'Deterioration',
+  P3: 'Technical',
+}
+
+export const PRIORITY_TEXT: Record<AlarmPriority, string> = {
+  P1: 'text-critical border-critical',
+  P2: 'text-watch border-watch',
+  P3: 'text-dim border-edge',
+}
 
 export const STATUS_LABEL: Record<BedStatus, string> = {
   critical: 'Critical',
