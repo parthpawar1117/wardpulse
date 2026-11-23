@@ -14,8 +14,8 @@ One nurse watching many beds needs to know three things: which patient is gettin
 | Ward simulator (PPG + scenarios) | ✅ done, tested |
 | Signal engine (SQI, NEWS2 subset, trend detection) | ✅ done, tested |
 | Central station UI | ✅ done, tested |
-| Alarm escalation and audit log | ⏳ next |
-| Offline-first sync and fleet health | ⏳ |
+| Alarm escalation, staff phones and audit log | ✅ done, tested |
+| Offline-first sync and fleet health | ⏳ next |
 | Validation lab and shift handover | ⏳ |
 | Hardware bridge (`bridge.py`) | ⏳ |
 
@@ -40,6 +40,15 @@ npm run build    # production build
 - **Attention strip.** Lists the beds that need a look, most urgent first: Critical, Watch, Check sensor, Artefact, Checking, Offline.
 - **Bed drawer.** Explains *why* a bed has its status: the NEWS2 breakdown, signal-quality reasons in plain words, ten-minute trend lines against the patient's own baseline, and node battery, link and packet loss.
 - **Simulator.** Runs in a Web Worker at 1×, 10× or 30×. The *simulated data* label is always on screen.
+
+### Alarms and staff phones
+
+- **Emergencies page people.** A bed that stays critical for 15 s on trusted readings becomes a P1 emergency: a banner across the console and a page to the duty nurse's phone. If nobody acknowledges within 2 minutes, the duty doctor is paged.
+- **Motion can't page anyone.** Untrusted readings neither raise nor clear alarms. On the demo ward, the motion and packet-loss beds raise nothing.
+- **Acknowledge, snooze, escalate.** Emergencies can be acknowledged, never snoozed. Lower priorities can be snoozed, with a required reason. Every action is in the audit log.
+- **WardPulse bot.** Staff can text `status`, `bed 5`, `alarms` or `ack 5`. Pages link to a frozen snapshot of the whole ward that needs no server. Messages never contain patient names.
+
+See [docs/alarms.md](docs/alarms.md) for the rules, the demo timeline and the path to a real WhatsApp number.
 
 On the simulated demo ward, the trend detector flags a slow deterioration about 19 minutes before a conventional HR > 110 alarm would. That number comes from synthetic patients; see the caveat in the engine docs.
 
