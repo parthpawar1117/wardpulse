@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { Packet } from '../schema/packet'
 import type { BedAssessment } from '../engine/bed'
+import { createDemoWard, createWardSimulator } from '../sim/ward'
 import { bedStatus, createWardStore, OFFLINE_AFTER, WAVE_SAMPLES, type BedView } from './store'
 
 const roster = [
@@ -165,5 +166,80 @@ describe('createWardStore', () => {
     const s = store.getState()
     expect(s.beds['bed-01'].latest).toBeNull()
     expect(s.rejected).toBe(0)
+  })
+})
+
+describe('ward store alarms and messages', () => {
+  /** Runs the demo ward through a fresh store for the given number of seconds. */
+  function demo(seconds: number) {
+    const beds = createDemoWard()
+    const store = createWardStore(beds.map(({ id, patient }) => ({ id, patient })))
+    const sim = createWardSimulator(beds, { hub: 'ward-a', startTs: 1_795_000_000_000, seed: 42 })
+    const run = (n: number) => {
+      for (let i = 0; i < n; i++) store.ingest(sim.tick())
+    }
+    run(seconds)
+    return { store, run }
+  }
+
+  it('pages only for the hypoxic bed across the demo shift, then escalates to the doctor', () => {
+    const { store, run } = demo(600)
+    let s = store.getState()
+    const emergencies = s.audit.filter((e) => e.event === 'raised' && e.detail.startsWith('P1'))
+    expect(emergencies.map((e) => e.bed)).toEqual(['bed-05'])
+    const pages = s.messages.filter((m) => m.from === 'wardpulse')
+    expect(pages[0]).toMatchObject({ staffId: 'n1', kind: 'emergency' })
+    expect(pages.some((m) => m.staffId === 'd1' && m.kind === 'escalation')).toBe(true)
+    run(1)
+    s = store.getState()
+    expect(s.alarms[0]).toMatchObject({ bed: 'bed-05', priority: 'P1' })
+  })
+
+  it('attaches a name-free ward snapshot to every page', () => {
+    const { store } = demo(400)
+    const page = store.getState().messages.find((m) => m.kind === 'emergency')!
+    expect(page.snapshot?.beds.find((b) => b.id === 'bed-05')?.status).toBe('critical')
+    expect(JSON.stringify(page.snapshot)).not.toContain('Wankhede')
+  })
+
+  it('stops escalation when the nurse acknowledges from the station', () => {
+    const { store, run } = demo(260)
+    const s = store.getState()
+    const alarm = s.alarms.find((a) => a.priority === 'P1')!
+    expect(alarm.paged).toEqual(['nurse'])
+    store.acknowledge(alarm.id, 'station')
+    run(300)
+    const after = store.getState()
+    expect(after.alarms.find((a) => a.id === alarm.id)).toMatchObject({ state: 'acknowledged', ackBy: 'Central station' })
+    expect(after.messages.some((m) => m.kind === 'escalation')).toBe(false)
+  })
+
+  it('answers staff chat through the bot and acts on "ack"', () => {
+    const { store } = demo(260)
+    store.chat('n1', 'ack 5')
+    const s = store.getState()
+    const [sent, reply] = s.messages.slice(-2)
+    expect(sent).toMatchObject({ staffId: 'n1', from: 'staff', text: 'ack 5' })
+    expect(reply).toMatchObject({ staffId: 'n1', from: 'wardpulse', kind: 'reply' })
+    expect(reply.text).toContain('Acknowledged Bed 05')
+    expect(s.alarms.find((a) => a.bed === 'bed-05')?.state).toBe('acknowledged')
+  })
+
+  it('snoozes and escalates through the store', () => {
+    const { store } = demo(600)
+    const p2 = store.getState().alarms.find((a) => a.priority === 'P2')!
+    expect(store.snooze(p2.id, 'station', 'Reviewed on round', 600)).toBe(true)
+    expect(store.getState().alarms.find((a) => a.id === p2.id)?.state).toBe('snoozed')
+    store.escalate(p2.id, 'station')
+    expect(store.getState().messages.at(-1)).toMatchObject({ staffId: 'd1', kind: 'escalation' })
+  })
+
+  it('clears alarms and messages on reset', () => {
+    const { store } = demo(400)
+    store.reset()
+    const s = store.getState()
+    expect(s.alarms).toEqual([])
+    expect(s.audit).toEqual([])
+    expect(s.messages).toEqual([])
   })
 })
