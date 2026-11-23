@@ -4,17 +4,21 @@ import { AuditLog } from './console/AuditLog'
 import { BedCard } from './console/BedCard'
 import { BedDrawer } from './console/BedDrawer'
 import { EmergencyBanner } from './console/EmergencyBanner'
+import { FleetPanel } from './console/FleetPanel'
 import { Header } from './console/Header'
 import { PhonesPanel, RingToast } from './console/Phones'
 import { snapshotFromHash } from './console/snapshot'
 import { SnapshotView } from './console/SnapshotView'
+import { SyncPanel } from './console/SyncPanel'
 import { DEMO_STAFF } from './console/staff'
 import { useAlarmTone } from './console/useAlarmTone'
 import { isPage, useRinging } from './console/useRinging'
 import { useWard } from './console/useWard'
+import { useSync } from './sync/useSync'
 
 function Console() {
-  const { state, clock, speed, setSpeed, paused, togglePause, actions } = useWard()
+  const sync = useSync()
+  const { state, clock, speed, setSpeed, paused, togglePause, actions } = useWard(sync.enqueue)
   const [openId, setOpenId] = useState<string | null>(null)
   const [phones, setPhones] = useState(false)
   const [sound, setSound] = useState(false)
@@ -38,6 +42,7 @@ function Console() {
         onToggleSound={() => setSound((s) => !s)}
         pages={state.messages.filter(isPage).length}
         onPhones={() => setPhones((p) => !p)}
+        uplink={{ online: sync.stats.online, queued: sync.stats.queued }}
       />
       <EmergencyBanner alarms={state.alarms} audit={state.audit} simTime={state.simTime} actions={actions} onOpen={setOpenId} />
       <AttentionStrip state={state} onOpen={setOpenId} />
@@ -45,6 +50,10 @@ function Console() {
         {state.order.map((id) => (
           <BedCard key={id} bed={state.beds[id]} alarm={alarmFor(id)} clock={clock} onOpen={() => setOpenId(id)} />
         ))}
+      </section>
+      <section aria-label="Ward systems" className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+        <SyncPanel sync={sync} />
+        <FleetPanel state={state} />
       </section>
       <AuditLog audit={state.audit} />
       <footer className="mt-auto pt-2 text-xs text-dim">

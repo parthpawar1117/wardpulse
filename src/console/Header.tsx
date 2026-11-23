@@ -12,6 +12,7 @@ export function Header({
   onToggleSound,
   pages,
   onPhones,
+  uplink,
 }: {
   simTime: number
   speed: Speed
@@ -24,6 +25,7 @@ export function Header({
   /** Pages sent to staff phones this shift. */
   pages: number
   onPhones: () => void
+  uplink: { online: boolean; queued: number }
 }) {
   return (
     <header className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
@@ -37,6 +39,12 @@ export function Header({
       <div className="flex flex-wrap items-center gap-3">
         <span className="rounded border border-watch/50 px-2 py-0.5 font-mono text-[11px] uppercase tracking-wider text-watch">
           Simulated data
+        </span>
+        <span
+          className={`font-mono text-[11px] ${uplink.online ? 'text-dim' : 'text-watch'}`}
+          title="Link to the district server. Monitoring works without it."
+        >
+          {uplink.online ? 'uplink ok' : `offline · ${uplink.queued} queued`}
         </span>
         <span className="font-mono text-sm" title="Time since the shift started (simulated)">
           <span className="text-dim">shift </span>
