@@ -60,6 +60,13 @@ describe('bedStatus', () => {
     expect(bedStatus(view(a), 10)).toBe('artefact')
   })
 
+  it('reports checking, not artefact, while the waveform window refills', () => {
+    // At start-up and after lost packets the SQI has too few samples to judge.
+    // That is not motion, and saying so would mislead the nurse.
+    const a = assessment({ trusted: false, news2: null, sqi: { sqi: 0, reasons: ['insufficient-data'], hr: null, pi: null } })
+    expect(bedStatus(view(a), 10)).toBe('checking')
+  })
+
   it('is critical on a NEWS2 red flag or medium band', () => {
     const red = assessment({ news2: { score: 3, hr: 0, spo2: 3, band: 'low-medium', redFlag: true, partial: true } })
     const medium = assessment({ news2: { score: 5, hr: 3, spo2: 2, band: 'medium', redFlag: true, partial: true } })
