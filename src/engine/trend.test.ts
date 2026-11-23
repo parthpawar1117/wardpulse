@@ -60,6 +60,15 @@ describe('createTrendDetector', () => {
     expect(states[239].alarm).toBe(false)
   })
 
+  it('caps the evidence so a long alarm still clears soon after recovery', () => {
+    // Half an hour of drift, then back to baseline. Unbounded, the evidence
+    // would take hours to drain; capped at twice the threshold it takes ~80 s.
+    const states = run(cfg, [...constant(80, 60), ...constant(90, 1800), ...constant(80, 120)])
+    expect(Math.max(...states.map((s) => s.cusum))).toBeLessThanOrEqual(2 * cfg.threshold)
+    expect(states[1859].alarm).toBe(true)
+    expect(states.at(-1)!.alarm).toBe(false)
+  })
+
   it('smooths the latest value with an EWMA', () => {
     const states = run({ ...cfg, alpha: 0.5 }, [80, 90])
     expect(states[0].ewma).toBe(80)
