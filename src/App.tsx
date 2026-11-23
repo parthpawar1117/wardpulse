@@ -1,17 +1,36 @@
+import { useCallback, useState } from 'react'
+import { AttentionStrip } from './console/AttentionStrip'
+import { BedCard } from './console/BedCard'
+import { BedDrawer } from './console/BedDrawer'
+import { Header } from './console/Header'
+import { useWard } from './console/useWard'
+
 function App() {
+  const { state, clock, speed, setSpeed, paused, togglePause } = useWard()
+  const [openId, setOpenId] = useState<string | null>(null)
+  const closeDrawer = useCallback(() => setOpenId(null), [])
+  const open = openId ? state.beds[openId] : null
+
   return (
-    <main className="min-h-screen px-4 py-6">
-      <header className="mx-auto flex max-w-6xl items-baseline justify-between gap-4">
-        <h1 className="font-display text-2xl font-bold tracking-tight">WardPulse</h1>
-        <p className="font-mono text-xs uppercase tracking-wider text-dim">
-          Ward console · simulated data
-        </p>
-      </header>
-      <section className="mx-auto mt-8 max-w-6xl rounded-lg border border-edge bg-panel p-6">
-        <p className="text-dim">
-          Central station coming online. The simulator and signal engine land in the next blocks.
-        </p>
+    <main className="mx-auto flex min-h-screen max-w-7xl flex-col gap-4 px-4 py-5">
+      <Header
+        simTime={state.simTime}
+        speed={speed}
+        onSpeed={setSpeed}
+        paused={paused}
+        onTogglePause={togglePause}
+        rejected={state.rejected}
+      />
+      <AttentionStrip state={state} onOpen={setOpenId} />
+      <section aria-label="Beds" className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {state.order.map((id) => (
+          <BedCard key={id} bed={state.beds[id]} clock={clock} onOpen={() => setOpenId(id)} />
+        ))}
       </section>
+      <footer className="mt-auto pt-2 text-xs text-dim">
+        Clinical decision support for evaluation only. Not a medical device. Patients and readings are simulated.
+      </footer>
+      {open && <BedDrawer bed={open} onClose={closeDrawer} />}
     </main>
   )
 }
