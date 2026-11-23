@@ -1,9 +1,11 @@
-import { useEffect, useRef, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import type { SqiReason } from '../engine/sqi'
 import { HR_RISE, SPO2_FALL } from '../engine/trend'
-import { bedLabel, STATUS_LABEL, STATUS_TEXT } from './format'
+import type { Alarm, AuditEntry } from './alarms'
+import { bedLabel, PRIORITY_LABEL, shiftClock, STATUS_LABEL, STATUS_TEXT } from './format'
 import type { BedView } from './store'
 import { Sparkline } from './Sparkline'
+import type { WardActions } from './useWard'
 
 const REASON_TEXT: Record<SqiReason, string> = {
   'insufficient-data': 'Collecting a few seconds of waveform',
@@ -39,8 +41,110 @@ function Meter({ value, max, label }: { value: number; max: number; label: strin
   )
 }
 
+const SNOOZE_MINUTES = [15, 30, 60]
+
+const AUDIT_TEXT: Record<AuditEntry['event'], string> = {
+  raised: 'Raised',
+  paged: 'Paged',
+  escalated: 'Escalated',
+  acknowledged: 'Acknowledged',
+  snoozed: 'Snoozed',
+  unsnoozed: 'Snooze ended',
+  upgraded: 'Stepped up',
+  downgraded: 'Stepped down',
+  resolved: 'Resolved',
+}
+
+/** The bed's open alarm with its controls, plus the alarm history for this bed. */
+function AlarmSection({ alarm, history, actions }: { alarm: Alarm | undefined; history: AuditEntry[]; actions: WardActions }) {
+  const [minutes, setMinutes] = useState(SNOOZE_MINUTES[0])
+  const [reason, setReason] = useState('')
+
+  const snooze = (e: FormEvent) => {
+    e.preventDefault()
+    if (alarm && actions.snooze(alarm.id, 'station', reason, minutes * 60)) setReason('')
+  }
+
+  return (
+    <Section title="Alarm">
+      {alarm ? (
+        <div className="space-y-3">
+          <div className="flex flex-wrap items-baseline gap-x-2">
+            <span className={`font-mono text-xs font-bold ${alarm.priority === 'P1' ? 'text-critical' : alarm.priority === 'P2' ? 'text-watch' : 'text-dim'}`}>
+              {alarm.priority} {PRIORITY_LABEL[alarm.priority]}
+            </span>
+            <span>{alarm.reason}</span>
+          </div>
+          <p className="text-sm text-dim">
+            Raised {shiftClock(alarm.raisedAt)}
+            {alarm.paged.length > 0 && ` · paged ${alarm.paged.join(', ')}`}
+            {alarm.state === 'acknowledged' && ` · acknowledged by ${alarm.ackBy}`}
+            {alarm.state === 'snoozed' && ` · snoozed until ${shiftClock(alarm.snoozeUntil ?? 0)}: ${alarm.snoozeReason}`}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {alarm.state !== 'acknowledged' && (
+              <button type="button" onClick={() => actions.acknowledge(alarm.id, 'station')} className="rounded-md bg-signal px-3 py-1 text-sm font-medium text-ground hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal">
+                Acknowledge
+              </button>
+            )}
+            {!alarm.paged.includes('doctor') && (
+              <button type="button" onClick={() => actions.escalate(alarm.id, 'station')} className="rounded-md border border-edge px-3 py-1 text-sm hover:bg-edge/50 focus-visible:outline-2 focus-visible:outline-signal">
+                Call doctor
+              </button>
+            )}
+          </div>
+          {alarm.priority === 'P1' ? (
+            <p className="text-xs text-dim">Emergencies cannot be snoozed. Acknowledge to stop escalation.</p>
+          ) : (
+            <form onSubmit={snooze} className="flex flex-wrap items-end gap-2">
+              <label className="flex flex-col gap-1 text-xs text-dim">
+                Snooze for
+                <select value={minutes} onChange={(e) => setMinutes(Number(e.target.value))} className="rounded-md border border-edge bg-ground px-2 py-1 text-sm text-ink">
+                  {SNOOZE_MINUTES.map((m) => <option key={m} value={m}>{m} min</option>)}
+                </select>
+              </label>
+              <label className="flex min-w-0 flex-1 flex-col gap-1 text-xs text-dim">
+                Reason (required)
+                <input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="e.g. reviewed on round" className="rounded-md border border-edge bg-ground px-2 py-1 text-sm text-ink placeholder:text-dim" />
+              </label>
+              <button type="submit" disabled={!reason.trim()} className="rounded-md border border-edge px-3 py-1 text-sm hover:bg-edge/50 disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-signal">
+                Snooze
+              </button>
+            </form>
+          )}
+        </div>
+      ) : (
+        <p className="text-sm text-dim">No open alarm.</p>
+      )}
+      {history.length > 0 && (
+        <ol className="mt-3 space-y-1 border-t border-edge pt-3 text-xs">
+          {history.slice(-8).reverse().map((e, i) => (
+            <li key={i} className="flex gap-2">
+              <span className="font-mono text-dim">{shiftClock(e.t)}</span>
+              <span>{AUDIT_TEXT[e.event]}</span>
+              <span className="min-w-0 truncate text-dim">{e.actor !== 'WardPulse' ? `${e.actor} · ` : ''}{e.detail}</span>
+            </li>
+          ))}
+        </ol>
+      )}
+    </Section>
+  )
+}
+
 /** Side panel with the reasoning behind a bed's status. */
-export function BedDrawer({ bed, onClose }: { bed: BedView; onClose: () => void }) {
+export function BedDrawer({
+  bed,
+  alarm,
+  history,
+  actions,
+  onClose,
+}: {
+  bed: BedView
+  alarm: Alarm | undefined
+  history: AuditEntry[]
+  actions: WardActions
+  onClose: () => void
+}) {
   const close = useRef<HTMLButtonElement>(null)
   const a = bed.latest
 
@@ -70,6 +174,8 @@ export function BedDrawer({ bed, onClose }: { bed: BedView; onClose: () => void 
             Close
           </button>
         </div>
+
+        <AlarmSection alarm={alarm} history={history} actions={actions} />
 
         <Section title="Early warning score (partial NEWS2)">
           {a?.news2 ? (

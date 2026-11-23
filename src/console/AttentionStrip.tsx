@@ -1,3 +1,4 @@
+import { AlarmBadge } from './AlarmBadge'
 import { bedLabel, STATUS_LABEL, STATUS_TEXT } from './format'
 import { STATUS_ORDER, type BedView, type WardState } from './store'
 
@@ -19,8 +20,7 @@ function reason(bed: BedView): string {
 
 /**
  * The one line a nurse reads first: which beds need attention, most urgent
- * first. This block shows status only; acknowledging and escalating alarms
- * arrives with the alarm state machine.
+ * first, with each bed's alarm and whether anyone has responded.
  */
 export function AttentionStrip({ state, onOpen }: { state: WardState; onOpen: (id: string) => void }) {
   const beds = state.order.map((id) => state.beds[id])
@@ -46,6 +46,10 @@ export function AttentionStrip({ state, onOpen }: { state: WardState; onOpen: (i
             <span className="font-mono text-xs">{bedLabel(b.id)}</span>
             <span className={`text-xs ${STATUS_TEXT[b.status]}`}>{STATUS_LABEL[b.status]}</span>
             <span className="text-xs text-dim">{reason(b)}</span>
+            {(() => {
+              const alarm = state.alarms.find((a) => a.bed === b.id)
+              return alarm && <AlarmBadge alarm={alarm} />
+            })()}
           </button>
         ))}
       </div>

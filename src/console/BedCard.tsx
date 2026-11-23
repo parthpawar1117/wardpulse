@@ -1,5 +1,7 @@
 import type { RefObject } from 'react'
 import { TRUST_THRESHOLD } from '../engine/bed'
+import { AlarmBadge } from './AlarmBadge'
+import type { Alarm } from './alarms'
 import { bedLabel, STATUS_BORDER, STATUS_LABEL, STATUS_TEXT } from './format'
 import type { BedView } from './store'
 import type { BatchClock } from './useWard'
@@ -18,7 +20,17 @@ function Vital({ label, unit, value, held }: { label: string; unit: string; valu
 }
 
 /** One bed in the central-station grid. The whole card opens the detail drawer. */
-export function BedCard({ bed, clock, onOpen }: { bed: BedView; clock: RefObject<BatchClock>; onOpen: () => void }) {
+export function BedCard({
+  bed,
+  alarm,
+  clock,
+  onOpen,
+}: {
+  bed: BedView
+  alarm: Alarm | undefined
+  clock: RefObject<BatchClock>
+  onOpen: () => void
+}) {
   const a = bed.latest
   const held = !a?.trusted
   const live = bed.status !== 'offline'
@@ -66,6 +78,7 @@ export function BedCard({ bed, clock, onOpen }: { bed: BedView; clock: RefObject
         <span title="Partial NEWS2: heart rate and SpO2 only">NEWS2* {shown?.news2?.score ?? '–'}</span>
         {trending && <span className="text-watch">↗ trend</span>}
         {held && shown && <span>vitals held</span>}
+        {alarm && <AlarmBadge alarm={alarm} />}
       </div>
     </button>
   )

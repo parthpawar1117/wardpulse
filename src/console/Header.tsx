@@ -8,6 +8,10 @@ export function Header({
   paused,
   onTogglePause,
   rejected,
+  sound,
+  onToggleSound,
+  pages,
+  onPhones,
 }: {
   simTime: number
   speed: Speed
@@ -15,6 +19,11 @@ export function Header({
   paused: boolean
   onTogglePause: () => void
   rejected: number
+  sound: boolean
+  onToggleSound: () => void
+  /** Pages sent to staff phones this shift. */
+  pages: number
+  onPhones: () => void
 }) {
   return (
     <header className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
@@ -57,6 +66,23 @@ export function Header({
           className="rounded-md border border-edge px-3 py-1 text-sm hover:bg-edge/50 focus-visible:outline-2 focus-visible:outline-signal"
         >
           {paused ? 'Resume' : 'Pause'}
+        </button>
+        <button
+          type="button"
+          onClick={onToggleSound}
+          aria-pressed={sound}
+          title="Alarm sound for unanswered emergencies"
+          className="rounded-md border border-edge px-3 py-1 text-sm hover:bg-edge/50 focus-visible:outline-2 focus-visible:outline-signal"
+        >
+          {sound ? 'Sound on' : 'Sound off'}
+        </button>
+        <button
+          type="button"
+          onClick={onPhones}
+          className="flex items-center gap-2 rounded-md border border-edge px-3 py-1 text-sm hover:bg-edge/50 focus-visible:outline-2 focus-visible:outline-signal"
+        >
+          Staff phones
+          {pages > 0 && <span className="rounded-full bg-critical px-1.5 font-mono text-[10px] font-bold text-ground">{pages}</span>}
         </button>
       </div>
     </header>
