@@ -5,6 +5,8 @@
 One nurse watching many beds needs to know three things: which patient is getting worse, which alarm is only a loose sensor, and whether any data was lost when the internet dropped. WardPulse answers all three for monitors that cost thousands of rupees, not lakhs.
 
 > Built during CODEFESTTHON 2026 (22–24 Nov 2026). The commit history in this repo is the build log.
+>
+> **AI disclosure:** WardPulse was built with AI-assisted development. The idea, scope and product decisions were directed by the author; every step was committed in the open as it happened, with tests, and the reasoning behind the design is documented in [docs/](docs/).
 
 ## Status
 
