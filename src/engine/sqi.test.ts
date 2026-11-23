@@ -3,6 +3,7 @@ import type { Packet } from '../schema/packet'
 import { createPpgGenerator, SAMPLE_RATE } from '../sim/ppg'
 import { createRng } from '../sim/rng'
 import type { TruthVitals } from '../sim/scenario'
+import { createDemoWard, createWardSimulator } from '../sim/ward'
 import { createSqiTracker, signalQuality } from './sqi'
 
 const truth = (over: Partial<TruthVitals> = {}): TruthVitals => ({
@@ -59,6 +60,25 @@ describe('signalQuality', () => {
     const r = signalQuality(window(truth(), 2))
     expect(r.sqi).toBe(0)
     expect(r.reasons).toEqual(['insufficient-data'])
+  })
+})
+
+describe('signalQuality on the demo ward', () => {
+  it('keeps stable patients trusted for a full ten minutes', () => {
+    const ward = createWardSimulator(createDemoWard(), { hub: 'ward-a', startTs: 0, seed: 42 })
+    const stable = ['bed-01', 'bed-02', 'bed-07']
+    const trackers = new Map(stable.map((id) => [id, createSqiTracker()]))
+    let total = 0
+    let trusted = 0
+    for (let s = 0; s < 600; s++) {
+      for (const p of ward.tick().packets) {
+        const r = trackers.get(p.node)?.push(p)
+        if (!r || s < 8) continue
+        total++
+        if (r.sqi >= 0.8) trusted++
+      }
+    }
+    expect(trusted / total).toBeGreaterThanOrEqual(0.99)
   })
 })
 
