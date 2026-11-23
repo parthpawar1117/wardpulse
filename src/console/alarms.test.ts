@@ -36,7 +36,8 @@ function ward() {
   const feed = (status: BedStatus, seconds: number, id = 'bed-05') => {
     for (let i = 0; i < seconds; i++) pages.push(...engine.update(t++, [{ id, status, latest: READINGS[status] }]))
   }
-  return { engine, feed, pages, now: () => t }
+  // Actions happen at the time of the last processed reading, as in the console.
+  return { engine, feed, pages, now: () => t - 1 }
 }
 
 describe('alarm engine', () => {
